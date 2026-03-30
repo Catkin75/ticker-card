@@ -10,7 +10,9 @@
 
 const STYLES = `
   :host {
-    --stc-bg:      var(--card-background-color, #1c1c1c);
+    --stc-bg:      transparent;
+    --ha-card-background: transparent;
+    --card-background-color: transparent;
     --stc-border:  var(--divider-color, #333);
     --stc-text:    var(--primary-text-color, #e0e0e0);
     --stc-dim:     var(--secondary-text-color, #888);
@@ -24,7 +26,9 @@ const STYLES = `
   ha-card {
     overflow: hidden;
     padding: 0;
-    background: var(--stc-bg);
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
   }
 
   .header {
@@ -199,6 +203,15 @@ class SensorTickerCard extends HTMLElement {
     this._buildTrack();
     this._startScroll();
     this._built = true;
+    // Force transparent background on the host element
+    this.style.setProperty('--ha-card-background', 'transparent');
+    this.style.setProperty('background', 'transparent');
+    const card = this.shadowRoot.querySelector('ha-card');
+    if (card) {
+      card.style.background = 'transparent';
+      card.style.boxShadow = 'none';
+      card.style.border = 'none';
+    }
   }
 
   _resolveRows() {
@@ -210,9 +223,9 @@ class SensorTickerCard extends HTMLElement {
       const stateObj = hass.states[s.entity];
 
       // show_when: only display row when the entity's own state matches
-      if (s.show_when) {
+      if (s.show_when && s.show_when.op && s.show_when.value != null) {
         if (!stateObj) continue;
-        if (!this._evalCondition(stateObj.state, s.show_when.op, s.show_when.value)) continue;
+        if (!this._evalCondition(stateObj.state, s.show_when.op, String(s.show_when.value))) continue;
       }
       if (!stateObj && !s.show_unavailable) continue;
 
